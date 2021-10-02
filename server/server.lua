@@ -364,3 +364,8 @@ Citizen.CreateThread(function()
         end
     end
 end)
+
+RegisterServerEvent("realtime:server:event")
+AddEventHandler("realtime:server:event", function()
+    TriggerClientEvent("realtime:client:event", source, tonumber(os.date("%H")), tonumber(os.date("%M")), tonumber(os.date("%S")))
+end)

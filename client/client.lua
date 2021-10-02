@@ -99,26 +99,40 @@ CreateThread(function()
     end
 end)
 
-CreateThread(function()
-    local hour = 0
-    local minute = 0
+Citizen.CreateThread(function()
+    local hour = 00
+    local minute = 00
     while true do
         if not disable then
-            Wait(0)
+            Citizen.Wait(500)
+            local years, months, days, hours, minutes, seconds = Citizen.InvokeNative(0x50C7A99057A69748, Citizen.PointerValueInt(), Citizen.PointerValueInt(), Citizen.PointerValueInt(), Citizen.PointerValueInt(), Citizen.PointerValueInt(), Citizen.PointerValueInt())
             local newBaseTime = baseTime
             if GetGameTimer() - 500  > timer then
                 newBaseTime = newBaseTime + 0.25
                 timer = GetGameTimer()
             end
             if freezeTime then
-                timeOffset = timeOffset + baseTime - newBaseTime
+                timeOffset = timeOffset + baseTime - newBaseTime            
             end
             baseTime = newBaseTime
-            hour = math.floor(((baseTime+timeOffset)/60)%24)
-            minute = math.floor((baseTime+timeOffset)%60)
-            NetworkOverrideClockTime(hour, minute, 0)
+            hour = hours
+            minute = minutes
+            day=days
+            month=months
+            year=years
+            second=seconds
+            NetworkOverrideClockTime(hour, minute, second)
+            TriggerServerEvent("realtime:server:event")
         else
-            Wait(1000)
+            Citizen.Wait(1000)
         end
     end
 end)
+
+SetMillisecondsPerGameMinute(60000)
+RegisterNetEvent("realtime:client:event")
+AddEventHandler("realtime:client:event", function(h, m, s)
+    NetworkOverrideClockTime(tonumber(h), tonumber(m), tonumber(s))
+end)
+TriggerServerEvent("realtime:server:event")
+
