@@ -22,35 +22,82 @@ local function ShiftToHour(hour)
     timeOffset = timeOffset - ( ( ((baseTime+timeOffset)/60) % 24 ) - hour ) * 60
 end
 
-local function NextWeatherStage()
-    if CurrentWeather == "CLEAR" or CurrentWeather == "CLOUDS" or CurrentWeather == "EXTRASUNNY"  then
-        local new = math.random(1,2)
-        if new == 1 then
-            CurrentWeather = "CLEARING"
-        else
-            CurrentWeather = "OVERCAST"
+DynamicWeatherTypes = {
+    'EXTRASUNNY', 
+    'EXTRASUNNY', 
+    'CLEAR', 
+    'CLEAR', 
+    'NEUTRAL', 
+    'SMOG', 
+    'FOGGY', 
+    'OVERCAST', 
+    'CLOUDS', 
+    'CLOUDS', 
+    'CLEARING', 
+    'RAIN', 
+    'THUNDER', 
+    'SNOW', 
+    'BLIZZARD', 
+    'SNOWLIGHT', 
+}
+RegisterCommand('-wxchange', function() -- useful if you arent feeling the current cycle
+    NextWeatherStage()
+end)
+local lastactwx = nil
+local secondlastactwx = nil
+local thirdlastactwx = nil
+
+function NextWeatherStage() 
+    local new  = math.random(1,13)
+    for k, v in pairs(DynamicWeatherTypes) do
+        if new == k then
+            if secondlastactwx ~= nil and lastactwx ~= nil and thirdlastactwx ~= nil then
+                if not (v == CurrentWeather and lastactwx == CurrentWeather and secondlastactwx == CurrentWeather and thirdlastactwx == CurrentWeather) then
+                    if not (thirdlastactwx == secondlastactwx) then
+                        thirdlastactwx = secondlastactwx
+                    end 
+                    if not (secondlastactwx == lastactwx) then
+                        secondlastactwx = lastactwx
+                    end 
+                        lastactwx = v
+                        CurrentWeather = v
+                    break
+                else
+                end
+            elseif secondlastactwx ~= nil and lastactwx ~= nil and thirdlastactwx == nil then
+                if not (v == CurrentWeather and lastactwx == CurrentWeather and secondlastactwx == CurrentWeather) then
+                    if not (thirdlastactwx == secondlastactwx) then
+                        thirdlastactwx = secondlastactwx
+                    end  
+                    if not (secondlastactwx == lastactwx) then
+                        secondlastactwx = lastactwx
+                    end 
+                        lastactwx = v
+                        CurrentWeather = v
+                    break
+                else
+                end
+            elseif lastactwx ~= nil and secondlastactwx == nil and thirdlastactwx == nil then
+                if not (v == CurrentWeather and lastactwx == CurrentWeather) then
+                    if not (secondlastactwx == lastactwx) then
+                        secondlastactwx = lastactwx
+                    end 
+                    lastactwx = v
+                    CurrentWeather = v
+                else
+                end
+            elseif lastactwx == nil and secondlastactwx == nil and thirdlastactwx == nil then
+                if not (CurrentWeather == v)  then
+                    lastactwx = v
+                    CurrentWeather = v
+                else
+                end
+            end
         end
-    elseif CurrentWeather == "CLEARING" or CurrentWeather == "OVERCAST" then
-        local new = math.random(1,6)
-        if new == 1 then
-            if CurrentWeather == "CLEARING" then CurrentWeather = "FOGGY" else CurrentWeather = "RAIN" end
-        elseif new == 2 then
-            CurrentWeather = "CLOUDS"
-        elseif new == 3 then
-            CurrentWeather = "CLEAR"
-        elseif new == 4 then
-            CurrentWeather = "EXTRASUNNY"
-        elseif new == 5 then
-            CurrentWeather = "SMOG"
-        else
-            CurrentWeather = "FOGGY"
-        end
-    elseif CurrentWeather == "THUNDER" or CurrentWeather == "RAIN" then
-        CurrentWeather = "CLEARING"
-    elseif CurrentWeather == "SMOG" or CurrentWeather == "FOGGY" then
-        CurrentWeather = "CLEAR"
     end
-    TriggerEvent("qb-weathersync:server:RequestStateSync")
+    SetTimeout(1250, function()
+        TriggerEvent("qb-weathersync:server:RequestStateSync")
+    end)
 end
 
 RegisterNetEvent('qb-weathersync:server:RequestStateSync', function()
