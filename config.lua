@@ -13,7 +13,7 @@ Config.Disabled         = false -- Set weather disabled                         
 
 Config.Locale           = 'en' -- Languages : en, fr, pt, tr, pt_br
 
-Config.AvailableWeatherTypes = { -- DON'T TOUCH EXCEPT IF YOU KNOW WHAT YOU ARE DOING
+Config.DynamicWeatherTypes = { -- DON'T TOUCH EXCEPT IF YOU KNOW WHAT YOU ARE DOING
     'EXTRASUNNY',
     'CLEAR',
     'NEUTRAL',
@@ -28,5 +28,4 @@ Config.AvailableWeatherTypes = { -- DON'T TOUCH EXCEPT IF YOU KNOW WHAT YOU ARE 
     'BLIZZARD',
     'SNOWLIGHT',
     'XMAS',
-    'HALLOWEEN',
 }
