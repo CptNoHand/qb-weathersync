@@ -11,6 +11,7 @@ local disable = Config.Disabled
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
     disable = false
     TriggerServerEvent('qb-weathersync:server:RequestStateSync')
+    TriggerServerEvent('qb-weathersync:server:RequestCommands')
 end)
 
 RegisterNetEvent('qb-weathersync:client:EnableSync', function()
@@ -35,6 +36,25 @@ end)
 RegisterNetEvent('qb-weathersync:client:SyncWeather', function(NewWeather, newblackout)
     CurrentWeather = NewWeather
     blackout = newblackout
+end)
+
+RegisterNetEvent('qb-weathersync:client:RequestCommands', function(isAllowed)
+    if isAllowed then
+        TriggerEvent('chat:addSuggestion', '/freezetime', Lang:t('help.freezecommand'), {})
+        TriggerEvent('chat:addSuggestion', '/freezeweather', Lang:t('help.freezeweathercommand'), {})
+        TriggerEvent('chat:addSuggestion', '/weather', Lang:t('help.weathercommand'), {
+            { name=Lang:t('help.weathertype'), help=Lang:t('help.availableweather') }
+        })
+        TriggerEvent('chat:addSuggestion', '/blackout', Lang:t('help.blackoutcommand'), {})
+        TriggerEvent('chat:addSuggestion', '/morning', Lang:t('help.morningcommand'), {})
+        TriggerEvent('chat:addSuggestion', '/noon', Lang:t('help.nooncommand'), {})
+        TriggerEvent('chat:addSuggestion', '/evening', Lang:t('help.eveningcommand'), {})
+        TriggerEvent('chat:addSuggestion', '/night', Lang:t('help.nightcommand'), {})
+        TriggerEvent('chat:addSuggestion', '/time', Lang:t('help.timecommand'), {
+            { name=Lang:t('help.timehname'), help=Lang:t('help.timeh') },
+            { name=Lang:t('help.timemname'), help=Lang:t('help.timem') }
+        })
+    end
 end)
 
 RegisterNetEvent('qb-weathersync:client:SyncTime', function(base, offset, freeze)
@@ -79,29 +99,29 @@ CreateThread(function()
     end
 end)
 
-CreateThread(function()
-    local hour
-    local minute = 0
-    local second = 0        --Add seconds for shadow smoothness
+Citizen.CreateThread(function()
+    local hour = 00
+    local minute = 00
     while true do
         if not disable then
-            Wait(0)
+            Citizen.Wait(500)
+            local years, months, days, hours, minutes, seconds = Citizen.InvokeNative(0x50C7A99057A69748, Citizen.PointerValueInt(), Citizen.PointerValueInt(), Citizen.PointerValueInt(), Citizen.PointerValueInt(), Citizen.PointerValueInt(), Citizen.PointerValueInt())
             local newBaseTime = baseTime
-            if GetGameTimer() - 22  > timer then    --Generate seconds in client side to avoid communiation
-                second = second + 1                 --Minutes are sent from the server every 2 seconds to keep sync
+            if GetGameTimer() - 500  > timer then
+                newBaseTime = newBaseTime + 0.25
                 timer = GetGameTimer()
             end
             if freezeTime then
-                timeOffset = timeOffset + baseTime - newBaseTime
-                second = 0
+                timeOffset = timeOffset + baseTime - newBaseTime            
             end
             baseTime = newBaseTime
-            hour = math.floor(((baseTime+timeOffset)/60)%24)
-            if minute ~= math.floor((baseTime+timeOffset)%60) then  --Reset seconds to 0 when new minute
-                minute = math.floor((baseTime+timeOffset)%60)
-                second = 0
-            end
-            NetworkOverrideClockTime(hour, minute, second)          --Send hour included seconds to network clock time
+            hour = hours
+            minute = minutes
+            day=days
+            month=months
+            year=years
+            second=seconds
+            NetworkOverrideClockTime(hour, minute, second)
             TriggerServerEvent("realtime:server:event")
         else
             Citizen.Wait(1000)
